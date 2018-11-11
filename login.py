@@ -2,20 +2,20 @@ import os
 import tabledb
 
 from flask import Flask
-from flask import flash, redirect, render_template, request, session, abort
+from flask import flash, redirect, render_template, request, session, abort, url_for
 
 
 
 def user(username):
-    return 'Hello <h1>' + username + '</h1>'
+    return render_template('user.html', username=username)
 
 
 def login():
-    print('*\n'*10)
+    # print('*\n'*10)
     username = str(request.form.get('username'))
     password = str(request.form.get('password'))
-    print(username)
-    print(password)
+    # print(username)
+    # print(password)
 
     user_db = tabledb.db_session()
 
@@ -25,7 +25,8 @@ def login():
         raise ValueError
     else:
         session['logged_in'] = True
-        return user(username)
+        # return user(username)
+        return redirect(url_for('user', username=username))
 
 
 def logout():
