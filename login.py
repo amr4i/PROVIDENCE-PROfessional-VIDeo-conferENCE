@@ -48,6 +48,8 @@ def login():
 
 @login_required
 def logout():
+    user = current_user
+    user.authenticated = False
     logout_user()
     return redirect(url_for('home'))
 

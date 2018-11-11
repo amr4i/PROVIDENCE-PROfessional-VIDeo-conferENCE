@@ -10,6 +10,9 @@
 <body>
 	<h2>Hello {{ username }}</h2><br>
 	<a href="{{ url_for('logout') }}">Logout</a>
+
+	<h1>Video Streaming Demonstration</h1>
+    <img src="{{ url_for('video_feed') }}">
 </body>
 
 </html>
