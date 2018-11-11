@@ -3,11 +3,27 @@ import tabledb
 
 from flask import Flask
 from flask import flash, redirect, render_template, request, session, abort, url_for
+from functools import wraps
+from flask_login import UserMixin, login_required, login_user, logout_user, \
+    current_user
 
 
+class User():
+    def __init__(self, name=''):
+        self.username = name
+        self.authenticated = False
 
-def user(username):
-    return render_template('user.html', username=username)
+    def is_active(self):
+        return True
+
+    def get_id(self):
+        return self.username
+
+    def is_authenticated(self):
+        return self.authenticated
+
+    def is_anonymous(self):
+        return False
 
 
 def login():
@@ -24,15 +40,30 @@ def login():
     if not query:
         raise ValueError
     else:
-        session['logged_in'] = True
-        # return user(username)
+        user = User(username)
+        login_user(user)
+        user.authenticated = True
         return redirect(url_for('user', username=username))
 
 
+@login_required
 def logout():
-    session['logged_in'] = False
-    return home()
+    logout_user()
+    return redirect(url_for('home'))
 
 
 def home():
-    return render_template('login.html')
+    curr_id = current_user.get_id()
+    if curr_id != None:
+        return redirect(url_for('user', username=curr_id))
+    else:
+        return render_template('home.html')
+
+
+@login_required
+def user(username):
+    curr_id = current_user.get_id()
+    if username == curr_id:
+        return render_template('user.html', username=username)
+    else:
+        return redirect(url_for('home'))
