@@ -7,6 +7,7 @@ from flask import Flask
 from flask import flash, redirect, render_template, request, url_for, Response
 from functools import wraps
 from flask_login import login_required, login_user, logout_user, current_user
+from flask_socketio import SocketIO
 
 
 def gen(camera):
@@ -20,3 +21,8 @@ def video_feed():
     cam = Camera()
     return Response(gen(cam),
                     mimetype='multipart/x-mixed-replace; boundary=frame')
+
+
+# @socketio.on('my_video_feed')
+# def test_video_feed(msg):
+#     print(msg)

@@ -5,14 +5,74 @@
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<link rel="icon" type="image/png" href="{{ url_for('static', filename='login/images/icons/favicon.ico') }}"/>
+	<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
+	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+	<!-- <script  type="text/javascript" charset="utf-8">
+		$(document).ready(function(){
+			namespace = '/video';
+			var socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+			var socket = io.connect('http://' + document.domain + ':' + location.port + '/test');
+			socket.on('my response', function(msg) {
+				$('#log').append('<p>Received: ' + msg.data + '</p>');
+			});
+			$('form#emit').submit(function(event) {
+				socket.emit('my event', {data: $('#emit_data').val()});
+				return false;
+			});
+			$('form#broadcast').submit(function(event) {
+				socket.emit('my broadcast event', {data: $('#broadcast_data').val()});
+				return false;
+			});
+			$('a#logout').submit(function(event) {
+				socket.emit('my event', {data: $('#emit_data').val()});
+				return false;
+			});
+		});
+	</script> -->
 </head>
 
-<body>
+<body onload="socketioSetup()">
 	<h2>Hello {{ username }}</h2><br>
-	<a href="{{ url_for('logout') }}">Logout</a>
+	<a id="logout" href="{{ url_for('logout') }}">Logout</a>
 
 	<h1>Video Streaming Demonstration</h1>
-    <img src="{{ url_for('video_feed') }}">
+	<!-- <img src="{{ url_for('video_feed') }}"> -->
+	<video id="test" autoplay="true" onplaying="sendData()"></video>
+	<!-- <input type="image" name="Video" id="test" onchange="sendData()"/> -->
+	<!-- <video controls autoplay></video> -->
+
+	<!-- <div id="test"></div> -->
+
+<script type="text/javascript">
+	var socket;
+	function socketioSetup(event){
+		namespace = '/video';
+		socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+	}
+
+	// var video = document.querySelector("#test");
+	var video = document.getElementById("test");
+	// var test = document.querySelector("#test");
+
+	function sendData(event){
+		console.log("Did you miss me!!!");
+	}
+	window.URL = window.URL || window.webkitURL;
+	if (navigator.mediaDevices.getUserMedia) {
+			navigator.mediaDevices.getUserMedia({video: true})
+		  .then(function(stream) {
+		  	video.srcObject = stream
+		  	// video.src = window.URL.createObjectURL(stream);
+		  	// video.setAttribute("src", stream)
+			socket.emit('my video feed', {data: stream});
+			console.log("Camera Working");
+		  })
+		  .catch(function(err0r) {
+			console.log("Something went wrong!");
+		  });
+	}
+</script>
+
 </body>
 
 </html>

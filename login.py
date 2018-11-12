@@ -38,7 +38,8 @@ def login():
     query = user_db.query(tabledb.UserBase).get(username)
 
     if not query:
-        raise ValueError
+        return redirect(url_for('home'))
+        # raise ValueError
     else:
         user = User(username)
         login_user(user)
