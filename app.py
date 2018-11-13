@@ -31,11 +31,41 @@ def load_user(user_id):
     return user
 
 
-@socketio.on('my video feed', namespace='/video')
+@socketio.on('check connect')
+# @socketio.on('check connect', namespace='/video')
 def test_video_feed(msg):
     print('*'*45)
     print(str(msg))
     print('*'*45)
+    # return multistream.check_connect(msg)
+
+
+# @socketio.on('connect', namespace='/video')
+# def test_video_feed(msg):
+#     print('*'*45)
+#     print(str(msg))
+#     print('*'*45)
+
+
+# @socketio.on('client description', namespace='/video')
+@socketio.on('client description')
+def test_video_feed(json):
+    print('client')
+    # print('*'*45)
+    # print(str(json))
+    # print('*'*45)
+    socketio.emit('peer connect', json, broadcast=True)
+
+
+@socketio.on('ice candidate')
+# @socketio.on('ice candidate', namespace='/video')
+def test_video_feed(json):
+    # print('ice')
+    # print('*'*45)
+    # print(str(json))
+    # print('*'*45)
+    socketio.emit('peer connect', json, broadcast=True)
+
 
 
 app.secret_key = os.urandom(12)

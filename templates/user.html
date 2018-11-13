@@ -4,9 +4,10 @@
 	<title>Home</title>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
-	<link rel="icon" type="image/png" href="{{ url_for('static', filename='login/images/icons/favicon.ico') }}"/>
+	<link rel="icon" type="image/png" href="{{ url_for('static', filename='home/images/icons/favicon.ico') }}"/>
 	<script type="text/javascript" src="//code.jquery.com/jquery-1.4.2.min.js"></script>
 	<script type="text/javascript" src="//cdnjs.cloudflare.com/ajax/libs/socket.io/1.3.5/socket.io.min.js"></script>
+	<script src="{{ url_for('static', filename='user/js/webrtc.js') }}"></script>
 	<!-- <script  type="text/javascript" charset="utf-8">
 		$(document).ready(function(){
 			namespace = '/video';
@@ -31,46 +32,213 @@
 	</script> -->
 </head>
 
-<body onload="socketioSetup()">
+<body>
 	<h2>Hello {{ username }}</h2><br>
 	<a id="logout" href="{{ url_for('logout') }}">Logout</a>
 
 	<h1>Video Streaming Demonstration</h1>
 	<!-- <img src="{{ url_for('video_feed') }}"> -->
-	<video id="test" autoplay="true" onplaying="sendData()"></video>
+	<!-- <video id="videoTest" autoplay="true"></video> -->
 	<!-- <input type="image" name="Video" id="test" onchange="sendData()"/> -->
 	<!-- <video controls autoplay></video> -->
 
-	<!-- <div id="test"></div> -->
+	<video id="localVideo" autoplay muted style="width:40%;"></video>
+    <video id="remoteVideo" autoplay style="width:40%;"></video>
 
+    <br />
+
+	<input type="button" id="start" onclick="start(true)" value="Start Video"></input>
+
+	<!-- <script src="{{ url_for('static', filename='user/js/webrtc.js') }}"></script> -->
 <script type="text/javascript">
-	var socket;
-	function socketioSetup(event){
-		namespace = '/video';
-		socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
-	}
+	pageReady();
 
-	// var video = document.querySelector("#test");
-	var video = document.getElementById("test");
-	// var test = document.querySelector("#test");
+///////////////////////////////////////////////////////////
+// 	var localVideo;
+// var localStream;
+// var remoteVideo;
+// var peerConnection;
+// var uuid;
+// var username;
+// var serverConnection;
 
-	function sendData(event){
-		console.log("Did you miss me!!!");
+// var peerConnectionConfig = {
+// 	'iceServers': [
+// 		{'urls': 'stun:stun.stunprotocol.org:3478'},
+// 		{'urls': 'stun:stun.l.google.com:19302'},
+// 	]
+// };
+
+function pageReady(){
+	uuid = createUUID();
+
+	localVideo = document.getElementById('localVideo');
+	remoteVideo = document.getElementById('remoteVideo');
+
+	username = document.URL.split('/')[4];
+	// var username = 'mrinaal';
+
+	var namespace = '/video';
+	serverConnection = io.connect(location.protocol + '//' + document.domain + ':' + location.port, {transports: ['websocket']});
+
+	serverConnection.on('connect', function () {
+		console.log('socket connected!');
+	});
+
+	serverConnection.emit('check connect', {data: username});
+	// serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
+	// serverConnection.onmessage = gotMessageFromServer;
+	serverConnection.on('peer connect', gotMessageFromServer);
+
+	// serverConnection.on('connect', function() {
+ //        socket.emit('my event', {data: 'I\'m connected!'});
+ //    });
+
+	var constraints = {
+		video: true,
+		audio: true,
+	};
+
+	if(navigator.mediaDevices.getUserMedia) {
+		navigator.mediaDevices.getUserMedia(constraints).then(getUserMediaSuccess).catch(errorHandler);
+	} else {
+		alert('Your browser does not support getUserMedia API');
 	}
-	window.URL = window.URL || window.webkitURL;
-	if (navigator.mediaDevices.getUserMedia) {
-			navigator.mediaDevices.getUserMedia({video: true})
-		  .then(function(stream) {
-		  	video.srcObject = stream
-		  	// video.src = window.URL.createObjectURL(stream);
-		  	// video.setAttribute("src", stream)
-			socket.emit('my video feed', {data: stream});
-			console.log("Camera Working");
-		  })
-		  .catch(function(err0r) {
-			console.log("Something went wrong!");
-		  });
-	}
+}
+
+
+// function getUserMediaSuccess(stream) {
+// 	localStream = stream;
+// 	localVideo.srcObject = stream;
+// }
+
+
+// function gotMessageFromServer(message) {
+// 	if(!peerConnection) start(false);
+
+// 	var signal = JSON.parse(message.data);
+
+// 	// Ignore messages from ourself
+// 	if(signal.uuid == uuid) return;
+
+// 	if(signal.sdp) {
+// 		peerConnection.setRemoteDescription(new RTCSessionDescription(signal.sdp)).then(function() {
+// 		// Only create answers in response to offers
+// 		if(signal.sdp.type == 'offer') {
+// 			peerConnection.createAnswer().then(createdDescription).catch(errorHandler);
+// 		}
+//     }).catch(errorHandler);
+// 	} else if(signal.ice) {
+// 		peerConnection.addIceCandidate(new RTCIceCandidate(signal.ice)).catch(errorHandler);
+// 	}
+// }
+
+// function gotIceCandidate(event) {
+// 	if(event.candidate != null) {
+// 		// serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
+// 	}
+// }
+
+// function createdDescription(description) {
+// 	console.log('got description');
+
+// 	peerConnection.setLocalDescription(description).then(function() {
+// 		// serverConnection.send(JSON.stringify({'sdp': peerConnection.localDescription, 'uuid': uuid}));
+// 	}).catch(errorHandler);
+// }
+
+// function gotRemoteStream(event) {
+// 	console.log('got remote stream');
+// 	remoteVideo.srcObject = event.streams[0];
+// }
+// function start(isCaller) {
+// 	peerConnection = new RTCPeerConnection(peerConnectionConfig);
+// 	peerConnection.onicecandidate = gotIceCandidate;
+// 	peerConnection.ontrack = gotRemoteStream;
+// 	peerConnection.addStream(localStream);
+
+// 	if(isCaller) {
+// 		peerConnection.createOffer().then(createdDescription).catch(errorHandler);
+// 	}
+// }
+
+
+
+// function errorHandler(error) {
+// 	console.log(error);
+// }
+
+// // Taken from http://stackoverflow.com/a/105074/515584
+// // Strictly speaking, it's not a real UUID, but it gets the job done here
+// function createUUID() {
+// 	function s4() {
+// 		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+// 	}
+
+// 	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+// }
+
+///////////////////////////////////////////////////////////
+	// pageSetup();
+	// var socket;
+	// var isPlaying;
+	// var gotMetadata;
+	// function socketioSetup(event){
+	// 	namespace = '/video';
+	// 	socket = io.connect(location.protocol + '//' + document.domain + ':' + location.port + namespace);
+	// 	isPlaying = false;
+	// 	gotMetadata = false;
+	// }
+
+	// // var video = document.querySelector("#test");
+	// var video = document.getElementById("videoTest");
+	// // var test = document.querySelector("#test");
+
+	// function sendData(){
+	// 	var canvas = document.createElement('canvas');
+	// 	canvas.width = video.videoWidth;
+	// 	canvas.height = video.videoHeight;
+	// 	canvas.getContext('2d').drawImage(video, 0, 0);
+	// 	// Other browsers will fall back to image/png
+	// 	var img = document.createElement('img');
+	// 	img.src = canvas.toDataURL('image/webp');
+
+	// 	socket.emit('my video feed', {data: img.src});
+	// 	console.log("Did you miss me!!!");
+	// }
+
+	// video.onloadedmetadata = function(event){
+	// 	console.log("video metadata ready");
+	// 	isPlaying = true;
+	// 	if (gotMetadata) {
+	// 		sendData();
+	// 	}
+	// };
+
+	// video.onplaying = function(event){
+	// 	console.log("video playing");
+	// 	gotMetadata = true;
+	// 	if (isPlaying)
+	// 		sendData();
+	// };
+
+	// // video.addEventListener()
+
+
+	// window.URL = window.URL || window.webkitURL;
+	// if (navigator.mediaDevices.getUserMedia) {
+	// 		navigator.mediaDevices.getUserMedia({video: true})
+	// 	  .then(function(stream) {
+	// 	  	video.srcObject = stream
+	// 	  	// video.src = window.URL.createObjectURL(stream);
+	// 	  	// video.setAttribute("src", stream)
+	// 		// socket.emit('my video feed', {data: stream});
+	// 		console.log("Camera Working");
+	// 	  })
+	// 	  .catch(function(err0r) {
+	// 		console.log("Something went wrong!");
+	// 	  });
+	// }
 </script>
 
 </body>
