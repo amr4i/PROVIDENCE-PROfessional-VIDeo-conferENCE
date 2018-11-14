@@ -42,8 +42,20 @@
 	<!-- <input type="image" name="Video" id="test" onchange="sendData()"/> -->
 	<!-- <video controls autoplay></video> -->
 
-	<video id="localVideo" autoplay muted style="width:40%;"></video>
-    <video id="remoteVideo" autoplay style="width:40%;"></video>
+	
+	<button onclick="createRoom()">Create Room</button>
+	<input type="text" name="roomId" id="joinRoomId" placeholder="Room ID">
+	<button onclick="joinRoom()">Join Room</button>
+
+	<br>
+
+	<p>Chat Room ID: </p> <p id="roomId"></p>
+
+
+	<div id="videoRoom">
+		<video id="localVideo" autoplay muted style="width:40%;"></video>
+    	<video id="remoteVideo" autoplay style="width:40%;"></video>
+    </div>
 
     <br />
 
@@ -88,7 +100,10 @@ function pageReady(){
 	serverConnection.emit('check connect', {data: username});
 	// serverConnection = new WebSocket('wss://' + window.location.hostname + ':8443');
 	// serverConnection.onmessage = gotMessageFromServer;
-	serverConnection.on('peer connect', gotMessageFromServer);
+	serverConnection.on('ice connect', addIce);
+	serverConnection.on('room id', gotRoomId);
+	serverConnection.on('set remote', setRemoteDesc);
+	serverConnection.on('create offer', createNewOffer);
 
 	// serverConnection.on('connect', function() {
  //        socket.emit('my event', {data: 'I\'m connected!'});
