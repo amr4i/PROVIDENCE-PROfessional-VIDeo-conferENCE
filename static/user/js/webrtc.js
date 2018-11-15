@@ -3,7 +3,8 @@ var localStream;
 var remoteVideo = {};
 var remoteVideo2;
 var peerConnection = {};
-var isRemoteSet = {}
+var isRemoteSet = {};
+var streamIdToVideoElement = {};
 var uuid;
 var username;
 var serverConnection;
@@ -78,16 +79,22 @@ function createdDescription(description) {
 
 function gotRemoteStream(event) {
 	console.log('got remote stream');
-	console.log(event)
+	
 	// remoteVideo[streamsRunning] = document.getElementById("remoteVideo"+streamsRunning.toString());
 
+	var streamId = event.streams[0].id;
 	var remoteVideoAdded = document.createElement("VIDEO");
-	document.getElementById('videoRoom').appendChild(remoteVideoAdded)
-	remoteVideoAdded.id = "remoteVideo"+streamsRunning.toString();
+	remoteVideoAdded.id = "remoteVideo_"+streamId;
 	remoteVideoAdded.style.width = "40%";
-	remoteVideoAdded.autoplay = true;
+	remoteVideoAdded.autoplay = true;	
+	console.log(event);
 	remoteVideoAdded.srcObject = event.streams[0];
-	remoteVideo[streamsRunning++] = remoteVideoAdded;	
+	
+	// To handle asynchronicity of parallel threads
+	// Else, each stream will get added multiple times due to multiple tracks.
+	if(streamsRunning++%2 == 0){
+		document.getElementById('videoRoom').appendChild(remoteVideoAdded);
+	}
 }
 
 // function gotRemoteStream(event) {
@@ -241,6 +248,7 @@ function joinRoom(event){
 	document.getElementById("createRoomButton").disabled = true;
 	document.getElementById("joinRoomButton").disabled = true;
 	document.getElementById("leaveRoomButton").disabled = false;	
+
 	serverConnection.emit('join', {'uuid': username, 'rid': roomId});
 	// start(false);
 }
