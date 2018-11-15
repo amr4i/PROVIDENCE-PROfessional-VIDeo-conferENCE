@@ -33,8 +33,12 @@
 </head>
 
 <body>
-	<h2>Hello {{ username }}</h2><br>
-	<a id="logout" href="{{ url_for('logout') }}">Logout</a>
+	<h2>Hello {{ username }}</h2>
+	<span>
+		<button style="float:right" id="logout" onclick="logoutUser()">Logout</button>
+	</span>
+	<!-- <a id="logout" href="{{ url_for('logout') }}">Logout</a> -->
+
 
 	<h1>Video Streaming Demonstration</h1>
 	<!-- <img src="{{ url_for('video_feed') }}"> -->
@@ -60,6 +64,12 @@
     </div>
 
 	<!-- <script src="{{ url_for('static', filename='user/js/webrtc.js') }}"></script> -->
+<script type="text/javascript">
+	function logoutUser(){
+		window.location.href = "{{ url_for('logout') }}";
+	}
+</script>
+
 <script type="text/javascript">
 	pageReady();
 
