@@ -3,6 +3,7 @@ import tabledb
 
 from flask import Flask
 from flask import flash, redirect, render_template, request, session, abort, url_for
+from flask import make_response
 from functools import wraps
 from flask_login import UserMixin, login_required, login_user, logout_user, \
     current_user
@@ -37,9 +38,18 @@ def login():
 
     query = user_db.query(tabledb.UserBase).get(username)
 
+    log_error = "Incorrect Username or Password!!"
     if not query:
-        return redirect(url_for('home', incorrectAuth=True))
+        resp = make_response(render_template('home.html', log_error=log_error))
+        # return redirect(url_for('home', log_error=log_error))
+        # return render_template('home.html', log_error=log_error)
+        return resp
         # raise ValueError
+    elif query.password != password:
+        resp = make_response(render_template('home.html', log_error=log_error))
+        # return redirect(url_for('home', log_error=log_error))
+        # return render_template('home.html', log_error=log_error)
+        return resp
     else:
         user = User(username)
         login_user(user)
@@ -60,7 +70,7 @@ def home():
     if curr_id != None:
         return redirect(url_for('user', username=curr_id))
     else:
-        return render_template('home.html')
+        return render_template('home.html', log_error="")
 
 
 @login_required

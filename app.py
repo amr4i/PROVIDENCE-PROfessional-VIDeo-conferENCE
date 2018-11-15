@@ -80,7 +80,8 @@ def room_join(json):
 
     user = json['uuid']
     if user in dict_users[room]:
-        print('Why are we here 2')
+        # print('Why are we here 2')
+        socketio.emit('restore state notInRoom', {"type":"alert", "msg":"User "+str(user)+" already exists in room " + str(room) + "!"})
         return
 
     socketio.emit('create offer', {'new_user': user}, room=room, broadcast=True)
@@ -95,9 +96,11 @@ def ice_candidate(json):
     username = json['uuid']
 
     if room not in list_of_rooms:
+        socketio.emit('restore state notInRoom', {"type":"alert", "msg":"Room "+str(room)+" does not exist!"})
         return
 
     if username not in dict_users[room]:
+        socketio.emit('restore state notInRoom', {"type":"alert", "msg":"Encountered Unexpected ICE candidate. Please Re-join!"})
         return
 
     json['rid'] = room
