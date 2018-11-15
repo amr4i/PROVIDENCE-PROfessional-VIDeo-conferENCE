@@ -6,7 +6,6 @@ from flask_socketio import join_room, leave_room
 import os
 import login
 import tabledb
-import multistream
 import random as rnd
 import time
 
@@ -30,7 +29,6 @@ app.add_url_rule("/", "home", login.home, methods=['GET', 'POST'])
 app.add_url_rule("/login", "login", login.login, methods=['GET', 'POST'])
 app.add_url_rule("/logout", "logout", login.logout, methods=['GET', 'POST'])
 app.add_url_rule("/user/<username>", 'user', login.user, methods=['GET', 'POST'])
-app.add_url_rule("/video_feed", 'video_feed', multistream.video_feed, methods=['GET', 'POST'])
 
 
 @login_manager.user_loader
@@ -113,11 +111,8 @@ def room_leave(json):
 	dict_users[room].remove(json['uuid'])
 	leave_room(room)
 	if len(dict_users[room]) == 0:
-		print(list_of_rooms)
-		print(dict_users)
 		dict_users.pop(room)
 		list_of_rooms.remove(room)
-		print(list_of_rooms)
 
 	socketio.emit('left room', json, room=room, broadcast=True)
 

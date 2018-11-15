@@ -41,11 +41,6 @@
 
 
 	<h1>Video Streaming Demonstration</h1>
-	<!-- <img src="{{ url_for('video_feed') }}"> -->
-	<!-- <video id="videoTest" autoplay="true"></video> -->
-	<!-- <input type="image" name="Video" id="test" onchange="sendData()"/> -->
-	<!-- <video controls autoplay></video> -->
-
 	
 	<button id="createRoomButton" onclick="createRoom()">Create Room</button>
 	<input type="text" name="roomId" id="joinRoomId" placeholder="Room ID">
@@ -66,6 +61,9 @@
 	<!-- <script src="{{ url_for('static', filename='user/js/webrtc.js') }}"></script> -->
 <script type="text/javascript">
 	function logoutUser(){
+		if( document.getElementById("leaveRoomButton").hidden == false){
+			leaveRoom();
+		}
 		window.location.href = "{{ url_for('logout') }}";
 	}
 </script>
