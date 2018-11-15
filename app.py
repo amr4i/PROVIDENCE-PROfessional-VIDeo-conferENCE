@@ -36,53 +36,23 @@ app.add_url_rule("/video_feed", 'video_feed', multistream.video_feed, methods=['
 @login_manager.user_loader
 def load_user(user_id):
     user = login.User(user_id)
-    # user.id = user_id
     return user
 
 
 @socketio.on('check connect')
-# @socketio.on('check connect', namespace='/video')
 def test_video_feed(msg):
     print('*'*45)
     print(str(msg))
     print('*'*45)
-    # return multistream.check_connect(msg)
 
 
-
-# @socketio.on('client description', namespace='/video')
 @socketio.on('sdp description')
 def client_description(json):
-    # global list_of_rooms
-    # global dict_users
-
-    # room = rnd.randint(0, 10000)
-    # while room in list_of_rooms:
-    #     room = rnd.randint(0, 10000)
-    #
-    # join_room(room)
-    # list_of_rooms.append(room)
-    # room = int(json['rid'])
     room = int(json['rid'])
     username = json['uuid']
     new_user = json['new_user']
-    # dict_users[room] = [username]
-    # user_sdp[username] = json
-    # print(json['uuid'])
-    # socketio.emit('peer connect', json, broadcast=True)
-    # socketio.emit('peer connect', json, room=room, broadcast=True)
-    # socketio.emit('room id', {'data': room}, room=room)
-    # print(dict_users[room])
-    # print(list_of_rooms)
-    # if room == -1:
-    #     print('Incorrect User: ' + username)
 
-    # for u in dict_users[room]:
-    #     if u in user_sdp.keys():
-    #         socketio.emit('set remote', user_sdp[u], room=room, broadcast=True)
-    json['rid'] = room
     socketio.emit('set remote', json, room=room, broadcast=True)
-
 
 
 @socketio.on('create room')
@@ -100,44 +70,29 @@ def create_room(json):
 
 @socketio.on('join')
 def room_join(json):
-    # global list_of_rooms
-    # global dict_users
 
     room = int(json['rid'])
 
     if room not in list_of_rooms:
-        print('Why are we here')
+        # alert("No such room exists!")
+        socketio.emit('restore state notInRoom', {"type":"alert", "msg":"Room "+str(room)+" does not exist!"})
         return
 
     user = json['uuid']
     if user in dict_users[room]:
         print('Why are we here 2')
         return
-        # dict_users[room].append(user)
-        # join_room(room)
 
-    # for u in dict_users[room]:
     socketio.emit('create offer', {'new_user': user}, room=room, broadcast=True)
     dict_users[room].append(user)
     join_room(room)
 
-    # print(dict_users[room])
-    # for u in dict_users[room]:
-    #     if u in user_sdp.keys():
-    #         socketio.emit('set remote', user_sdp[u], room=room, broadcast=True)
-
-    # time.sleep(0.5)
-    # for u in dict_users[room]:
-    #     if u in user_ice.keys():
-    #         socketio.emit('peer connect', user_ice[u], room=room, broadcast=True)
 
 
 @socketio.on('ice candidate')
-# @socketio.on('ice candidate', namespace='/video')
 def ice_candidate(json):
     room = int(json['rid'])
     username = json['uuid']
-    # user_ice[username] = json
 
     if room not in list_of_rooms:
         return
@@ -145,12 +100,6 @@ def ice_candidate(json):
     if username not in dict_users[room]:
         return
 
-    # user = json['uuid']
-    # if user not in dict_users[room]:
-    #     dict_users.append(user)
-    #     join_room(room)
-
-    # socketio.emit('peer connect', json, broadcast=True)
     json['rid'] = room
     socketio.emit('ice connect', json, room=room, broadcast=True)
 
@@ -173,5 +122,4 @@ def room_leave(json):
 
 app.secret_key = os.urandom(12)
 if __name__ == "__main__":
-    # app.run(host='0.0.0.0', threaded=True)
     socketio.run(app)

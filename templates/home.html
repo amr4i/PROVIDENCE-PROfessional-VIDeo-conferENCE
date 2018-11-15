@@ -97,6 +97,13 @@
 	</script>
 <!--===============================================================================================-->
 	<script src="{{ url_for('static', filename='home/js/main.js') }}"></script>
+<!--===============================================================================================-->
+	<script>
+		var temp = "{{ incorrectAuth }}";
+		console.log(temp);
+		if(temp == true)
+			alert("Incorrect username or password. Please try again.");
+	</script>
 
 </body>
 </html>

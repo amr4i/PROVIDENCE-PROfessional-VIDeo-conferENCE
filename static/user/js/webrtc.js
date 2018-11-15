@@ -5,7 +5,6 @@ var remoteVideo2;
 var peerConnection = {};
 var isRemoteSet = {};
 var streamIdToVideoElement = {};
-var uuid;
 var username;
 var serverConnection;
 var roomId = -1;
@@ -170,6 +169,7 @@ function addIce(signal) {
 	console.log(signal);
 
 	if(isRemoteSet[signal.uuid] == false)
+
 		return;
 
 	if(signal.ice) {
@@ -216,8 +216,19 @@ function setRemoteDesc(signal){
 	}).catch(errorHandler);
 }
 
-function leaveRoom(event){
-	console.log("Leaving Room");
+
+function restoreStateInRoom(signal) {
+	document.getElementById("createRoomButton").hidden = true;
+	document.getElementById("joinRoomButton").hidden = true;
+	document.getElementById("leaveRoomButton").hidden = false;
+	document.getElementById("createRoomButton").disabled = true;
+	document.getElementById("joinRoomButton").disabled = true;
+	document.getElementById("leaveRoomButton").disabled = false;
+	document.getElementById("joinRoomId").hidden = true;
+}
+
+
+function restoreStateNotInRoom(signal) {
 	document.getElementById("createRoomButton").hidden = false;
 	document.getElementById("joinRoomButton").hidden = false;
 	document.getElementById("leaveRoomButton").hidden = true;
@@ -227,8 +238,16 @@ function leaveRoom(event){
 	document.getElementById("joinRoomId").hidden = false;
 	document.getElementById("joinRoomId").value = "";
 	document.getElementById("roomId").innerHTML = "";
+	if(signal.type == "alert"){
+		alert(signal.msg);
+	}
+}
 
-	// for (var peerId in peerConnection){
+
+function leaveRoom(event){
+	console.log("Leaving Room");
+	restoreStateNotInRoom({"type":"onLeave"});
+
 	Object.keys(peerConnection).forEach(function(peerId) {
 		var jsonSignal = {'uuid': peerId, 'rid': roomId};
 		endConnection(jsonSignal);
@@ -239,15 +258,9 @@ function leaveRoom(event){
 
 function createRoom(event){
 	console.log("Create Room");
-	document.getElementById("createRoomButton").hidden = true;
-	document.getElementById("joinRoomButton").hidden = true;
-	document.getElementById("leaveRoomButton").hidden = false;
-	document.getElementById("createRoomButton").disabled = true;
-	document.getElementById("joinRoomButton").disabled = true;
-	document.getElementById("leaveRoomButton").disabled = false;
-	document.getElementById("joinRoomId").hidden = true;
+	restoreStateInRoom({"type":"onCreate"}); 
+
 	serverConnection.emit('create room', {'uuid': username});
-	// start(true);
 }
 
 
@@ -257,17 +270,11 @@ function joinRoom(event){
 	console.log("Join Room " + roomId);
 	var p = document.getElementById('roomId');
 	p.innerHTML = roomId;
-	document.getElementById("createRoomButton").hidden = true;
-	document.getElementById("joinRoomButton").hidden = true;
-	document.getElementById("leaveRoomButton").hidden = false;
-	document.getElementById("createRoomButton").disabled = true;
-	document.getElementById("joinRoomButton").disabled = true;
-	document.getElementById("leaveRoomButton").disabled = false;	
-	document.getElementById("joinRoomId").hidden = true;
+	restoreStateInRoom({"type":"onJoin"});
 
 	serverConnection.emit('join', {'uuid': username, 'rid': roomId});
-	// start(false);
 }
+
 
 function gotRoomId(message){
 	var p = document.getElementById('roomId');
@@ -311,10 +318,10 @@ function errorHandler(error) {
 
 // Taken from http://stackoverflow.com/a/105074/515584
 // Strictly speaking, it's not a real UUID, but it gets the job done here
-function createUUID() {
-	function s4() {
-		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
-	}
+// function createUUID() {
+// 	function s4() {
+// 		return Math.floor((1 + Math.random()) * 0x10000).toString(16).substring(1);
+// 	}
 
-	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
-}
+// 	return s4() + s4() + '-' + s4() + '-' + s4() + '-' + s4() + '-' + s4() + s4() + s4();
+// }
