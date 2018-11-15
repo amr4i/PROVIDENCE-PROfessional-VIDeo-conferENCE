@@ -9,7 +9,7 @@ var uuid;
 var username;
 var serverConnection;
 var roomId = -1;
-var streamsRunning = 0;
+var streamsRecieved = 0;
 
 var peerConnectionConfig = {
 	'iceServers': [
@@ -92,7 +92,7 @@ function gotRemoteStream(event) {
 	
 	// To handle asynchronicity of parallel threads
 	// Else, each stream will get added multiple times due to multiple tracks.
-	if(streamsRunning++%2 == 0){
+	if(streamsRecieved++%2 == 0){
 		document.getElementById('videoRoom').appendChild(remoteVideoAdded);
 	}
 }
@@ -126,6 +126,7 @@ function endConnection(signal) {
 	console.log("Ending Connection with ");
 	console.log(signal.uuid);
 
+	var streamId = peerConnection[signal.uuid].getRemoteStreams()[0].id;
 	peerConnection[signal.uuid].onicecandidate = null;
 	peerConnection[signal.uuid].ontrack = null
 	
@@ -135,7 +136,10 @@ function endConnection(signal) {
  //    }
  //    remoteVideo[].src = null;
     peerConnection[signal.uuid].close();
-    peerConnection[signal.uuid] = null;
+    delete peerConnection[signal.uuid];
+
+    var videoElement = document.getElementById("remoteVideo_"+streamId);
+    videoElement.parentNode.removeChild(videoElement);
 
     //shift all other remoteVideo elements after it
     // to cover up the blank space 
@@ -214,23 +218,34 @@ function setRemoteDesc(signal){
 
 function leaveRoom(event){
 	console.log("Leaving Room");
-	document.getElementById("createRoomButton").style.display = "block";
-	document.getElementById("joinRoomButton").style.display = "block";
-	document.getElementById("leaveRoomButton").style.display = "none";
+	document.getElementById("createRoomButton").hidden = false;
+	document.getElementById("joinRoomButton").hidden = false;
+	document.getElementById("leaveRoomButton").hidden = true;
 	document.getElementById("createRoomButton").disabled = false;
 	document.getElementById("joinRoomButton").disabled = false;
 	document.getElementById("leaveRoomButton").disabled = true;
+	document.getElementById("joinRoomId").hidden = false;
+	document.getElementById("joinRoomId").value = "";
+	document.getElementById("roomId").innerHTML = "";
+
+	// for (var peerId in peerConnection){
+	Object.keys(peerConnection).forEach(function(peerId) {
+		var jsonSignal = {'uuid': peerId, 'rid': roomId};
+		endConnection(jsonSignal);
+	});
+
 	serverConnection.emit('leave room', {'uuid': username, 'rid':roomId});
 }
 
 function createRoom(event){
 	console.log("Create Room");
-	document.getElementById("createRoomButton").style.display = "none";
-	document.getElementById("joinRoomButton").style.display = "none";
-	document.getElementById("leaveRoomButton").style.display = "block";
+	document.getElementById("createRoomButton").hidden = true;
+	document.getElementById("joinRoomButton").hidden = true;
+	document.getElementById("leaveRoomButton").hidden = false;
 	document.getElementById("createRoomButton").disabled = true;
 	document.getElementById("joinRoomButton").disabled = true;
 	document.getElementById("leaveRoomButton").disabled = false;
+	document.getElementById("joinRoomId").hidden = true;
 	serverConnection.emit('create room', {'uuid': username});
 	// start(true);
 }
@@ -242,12 +257,13 @@ function joinRoom(event){
 	console.log("Join Room " + roomId);
 	var p = document.getElementById('roomId');
 	p.innerHTML = roomId;
-	document.getElementById("createRoomButton").style.display = "none";
-	document.getElementById("joinRoomButton").style.display = "none";
-	document.getElementById("leaveRoomButton").style.display = "block";
+	document.getElementById("createRoomButton").hidden = true;
+	document.getElementById("joinRoomButton").hidden = true;
+	document.getElementById("leaveRoomButton").hidden = false;
 	document.getElementById("createRoomButton").disabled = true;
 	document.getElementById("joinRoomButton").disabled = true;
 	document.getElementById("leaveRoomButton").disabled = false;	
+	document.getElementById("joinRoomId").hidden = true;
 
 	serverConnection.emit('join', {'uuid': username, 'rid': roomId});
 	// start(false);

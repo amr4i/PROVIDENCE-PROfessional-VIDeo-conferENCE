@@ -46,7 +46,8 @@
 	<button id="createRoomButton" onclick="createRoom()">Create Room</button>
 	<input type="text" name="roomId" id="joinRoomId" placeholder="Room ID">
 	<button id="joinRoomButton" onclick="joinRoom()">Join Room</button>
-	<button id="leaveRoomButton" onclick="leaveRoom()" disbaled style="display:none;">Leave Room</button>
+	<!-- <button id="leaveRoomButton" onclick="leaveRoom()" disbaled style="display:none;">Leave Room</button> -->
+	<button id="leaveRoomButton" onclick="leaveRoom()" disbaled hidden>Leave Room</button>
 
 	<br>
 
@@ -57,10 +58,6 @@
 		<video id="localVideo" autoplay muted style="width:40%;"></video>
     	<!-- <video id="remoteVideo" autoplay style="width:40%;"></video> -->
     </div>
-
-    <br />
-
-	<input type="button" id="start" onclick="start(true)" value="Start Video"></input>
 
 	<!-- <script src="{{ url_for('static', filename='user/js/webrtc.js') }}"></script> -->
 <script type="text/javascript">

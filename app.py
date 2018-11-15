@@ -158,8 +158,15 @@ def ice_candidate(json):
 @socketio.on('leave room')
 def room_leave(json):
 	room = int(json['rid'])
-	del dict_users[room]
+	dict_users[room].remove(json['uuid'])
 	leave_room(room)
+	if len(dict_users[room]) == 0:
+		print(list_of_rooms)
+		print(dict_users)
+		dict_users.pop(room)
+		list_of_rooms.remove(room)
+		print(list_of_rooms)
+
 	socketio.emit('left room', json, room=room, broadcast=True)
 
 
