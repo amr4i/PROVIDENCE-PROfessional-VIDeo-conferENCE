@@ -43,9 +43,10 @@
 	<!-- <video controls autoplay></video> -->
 
 	
-	<button onclick="createRoom()">Create Room</button>
+	<button id="createRoomButton" onclick="createRoom()">Create Room</button>
 	<input type="text" name="roomId" id="joinRoomId" placeholder="Room ID">
-	<button onclick="joinRoom()">Join Room</button>
+	<button id="joinRoomButton" onclick="joinRoom()">Join Room</button>
+	<button id="leaveRoomButton" onclick="leaveRoom()" disbaled style="display:none;">Leave Room</button>
 
 	<br>
 
@@ -54,7 +55,7 @@
 
 	<div id="videoRoom">
 		<video id="localVideo" autoplay muted style="width:40%;"></video>
-    	<video id="remoteVideo" autoplay style="width:40%;"></video>
+    	<!-- <video id="remoteVideo" autoplay style="width:40%;"></video> -->
     </div>
 
     <br />
@@ -85,7 +86,15 @@ function pageReady(){
 	uuid = createUUID();
 
 	localVideo = document.getElementById('localVideo');
-	remoteVideo = document.getElementById('remoteVideo');
+	// var screenCount = 6;
+	// var i;
+	// for (i = 0; i<screenCount; i++){
+	// 	remoteVideo[i] = document.createElement("VIDEO");
+	// 	remoteVideo[i].id = "remoteVideo"+i.toString();
+	// 	remoteVideo[i].style.width = "40%";
+	// 	remoteVideo[i].autoplay = true;
+	// 	document.getElementById('videoRoom').appendChild(remoteVideo[i]);
+	// }
 
 	username = document.URL.split('/')[4];
 	// var username = 'mrinaal';
@@ -104,6 +113,7 @@ function pageReady(){
 	serverConnection.on('room id', gotRoomId);
 	serverConnection.on('set remote', setRemoteDesc);
 	serverConnection.on('create offer', createNewOffer);
+	serverConnection.on('left room', endConnection)
 
 	// serverConnection.on('connect', function() {
  //        socket.emit('my event', {data: 'I\'m connected!'});

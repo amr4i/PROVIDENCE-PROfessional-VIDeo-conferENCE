@@ -155,6 +155,14 @@ def ice_candidate(json):
     socketio.emit('ice connect', json, room=room, broadcast=True)
 
 
+@socketio.on('leave room')
+def room_leave(json):
+	room = int(json['rid'])
+	del dict_users[room]
+	leave_room(room)
+	socketio.emit('left room', json, room=room, broadcast=True)
+
+
 
 app.secret_key = os.urandom(12)
 if __name__ == "__main__":

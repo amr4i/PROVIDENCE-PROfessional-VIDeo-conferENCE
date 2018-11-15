@@ -1,12 +1,14 @@
 var localVideo;
 var localStream;
-var remoteVideo;
+var remoteVideo = {};
+var remoteVideo2;
 var peerConnection = {};
 var isRemoteSet = {}
 var uuid;
 var username;
 var serverConnection;
 var roomId = -1;
+var streamsRunning = 0;
 
 var peerConnectionConfig = {
 	'iceServers': [
@@ -63,15 +65,7 @@ function gotMessageFromServer(signal) {
 	}
 }
 
-function gotIceCandidate(event) {
-	// console.log('in gotIceCandidate');
-	if(event.candidate != null) {
-		// console.log('in gotIceCandidate if');
-		// serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
-		// serverConnection.emit('ice candidate', {'ice': event.candidate, 'uuid': uuid});
-		serverConnection.emit('ice candidate', {'ice': event.candidate, 'uuid': username, 'rid': roomId});
-	}
-}
+
 
 function createdDescription(description) {
 	console.log('got description');
@@ -84,8 +78,23 @@ function createdDescription(description) {
 
 function gotRemoteStream(event) {
 	console.log('got remote stream');
-	remoteVideo.srcObject = event.streams[0];
+	console.log(event)
+	// remoteVideo[streamsRunning] = document.getElementById("remoteVideo"+streamsRunning.toString());
+
+	var remoteVideoAdded = document.createElement("VIDEO");
+	document.getElementById('videoRoom').appendChild(remoteVideoAdded)
+	remoteVideoAdded.id = "remoteVideo"+streamsRunning.toString();
+	remoteVideoAdded.style.width = "40%";
+	remoteVideoAdded.autoplay = true;
+	remoteVideoAdded.srcObject = event.streams[0];
+	remoteVideo[streamsRunning++] = remoteVideoAdded;	
 }
+
+// function gotRemoteStream(event) {
+// 	console.log('got remote stream');
+// 	console.log(event)
+// 	remoteVideo.srcObject = event.streams[0];
+// }
 
 function start(isCaller) {
 	// if(!isCaller){
@@ -103,8 +112,42 @@ function start(isCaller) {
 }
 
 
+function endConnection(signal) {
+	
+	if(signal.rid != roomId) return;
+
+	console.log("Ending Connection with ");
+	console.log(signal.uuid);
+
+	peerConnection[signal.uuid].onicecandidate = null;
+	peerConnection[signal.uuid].ontrack = null
+	
+	// how to get which remote Video to which uuid? 
+	// if (remoteVideo[].srcObject) {
+ //      remoteVideo[].srcObject.getTracks().forEach(track => track.stop());
+ //    }
+ //    remoteVideo[].src = null;
+    peerConnection[signal.uuid].close();
+    peerConnection[signal.uuid] = null;
+
+    //shift all other remoteVideo elements after it
+    // to cover up the blank space 
+
+	// delete peerConnection[signal.uuid];	
+
+}
+
 ////////////////////////////////////////////////////////////////////////////////////
 
+function gotIceCandidate(event) {
+	// console.log('in gotIceCandidate');
+	if(event.candidate != null) {
+		// console.log('in gotIceCandidate if');
+		// serverConnection.send(JSON.stringify({'ice': event.candidate, 'uuid': uuid}));
+		// serverConnection.emit('ice candidate', {'ice': event.candidate, 'uuid': uuid});
+		serverConnection.emit('ice candidate', {'ice': event.candidate, 'uuid': username, 'rid': roomId});
+	}
+}
 
 function addIce(signal) {
 	// Ignore messages from ourself
@@ -162,9 +205,25 @@ function setRemoteDesc(signal){
 	}).catch(errorHandler);
 }
 
+function leaveRoom(event){
+	console.log("Leaving Room");
+	document.getElementById("createRoomButton").style.display = "block";
+	document.getElementById("joinRoomButton").style.display = "block";
+	document.getElementById("leaveRoomButton").style.display = "none";
+	document.getElementById("createRoomButton").disabled = false;
+	document.getElementById("joinRoomButton").disabled = false;
+	document.getElementById("leaveRoomButton").disabled = true;
+	serverConnection.emit('leave room', {'uuid': username, 'rid':roomId});
+}
 
 function createRoom(event){
 	console.log("Create Room");
+	document.getElementById("createRoomButton").style.display = "none";
+	document.getElementById("joinRoomButton").style.display = "none";
+	document.getElementById("leaveRoomButton").style.display = "block";
+	document.getElementById("createRoomButton").disabled = true;
+	document.getElementById("joinRoomButton").disabled = true;
+	document.getElementById("leaveRoomButton").disabled = false;
 	serverConnection.emit('create room', {'uuid': username});
 	// start(true);
 }
@@ -176,7 +235,12 @@ function joinRoom(event){
 	console.log("Join Room " + roomId);
 	var p = document.getElementById('roomId');
 	p.innerHTML = roomId;
-
+	document.getElementById("createRoomButton").style.display = "none";
+	document.getElementById("joinRoomButton").style.display = "none";
+	document.getElementById("leaveRoomButton").style.display = "block";
+	document.getElementById("createRoomButton").disabled = true;
+	document.getElementById("joinRoomButton").disabled = true;
+	document.getElementById("leaveRoomButton").disabled = false;	
 	serverConnection.emit('join', {'uuid': username, 'rid': roomId});
 	// start(false);
 }
